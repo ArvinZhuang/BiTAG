@@ -1,0 +1,7 @@
+{
+  "task": "title_to_abs",
+  "max_length": 50,
+  "num_beams": 20,
+  "num_return_sequences": 10,
+  "text": "Deep Query Likelihood Model for Information Retrieval"
+}
