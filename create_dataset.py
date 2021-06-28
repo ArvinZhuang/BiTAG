@@ -1,5 +1,6 @@
 import arxivscraper
 import os
+import argparse
 if not os.path.exists('data'):
     os.makedirs('data')
 
@@ -43,7 +44,7 @@ def create_dataset(category, date_from, date_until):
             continue
 
         total_num_recodrs += len(output)
-        with open(f'{date_from}_to_{date_until}.tsv', 'a+') as file:
+        with open(f'data/{date_from}_to_{date_until}.tsv', 'a+') as file:
             for record in output:
                 file.write(record['title'] + "\t" + record['abstract'] + '\n')
         print(f"Get record from {current_date} until {next_date}, total number of records: {total_num_recodrs}")
@@ -58,9 +59,11 @@ def create_dataset(category, date_from, date_until):
         next_date = f"{next_year}-{next_month:02d}-{end_day:02d}"
 
 
-
 if __name__ == "__main__":
-    date_from = '2000-06-01'
-    date_until = '2010-06-01'
-    category = 'cs'
-    create_dataset(category, date_from, date_until)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--date_from", type=str, required=True, help="such as 2020-01-01")
+    parser.add_argument("--date_until", type=str, required=True, help="such as 2020-01-01")
+    parser.add_argument("--category", type=str, required=True, help="such as cs")
+    args = parser.parse_args()
+
+    create_dataset(args.category, args.date_from, args.date_until)

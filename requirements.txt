@@ -47,3 +47,4 @@ urllib3==1.26.6
 Werkzeug==2.0.1
 yarl==1.6.3
 zipp==3.4.1
+fairscale==0.3.7

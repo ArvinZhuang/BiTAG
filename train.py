@@ -5,6 +5,7 @@ from pytorch_lightning import loggers as pl_loggers
 import torch
 from torch.utils.data import Dataset, DataLoader
 import os
+import argparse
 
 
 class CheckpointEveryEpoch(pl.Callback):
@@ -15,19 +16,14 @@ class CheckpointEveryEpoch(pl.Callback):
 
     def __init__(
         self,
-        start_epoc,
         file_path,
     ):
-
-        self.start_epoc = start_epoc
         self.file_path = file_path
 
     def on_epoch_end(self, trainer: pl.Trainer, _):
         """ Check if we should save a checkpoint after every train epoch """
-        epoch = trainer.current_epoch
-        if epoch >= self.start_epoc:
-            ckpt_path = f"{self.file_path}_e{epoch}.ckpt"
-            trainer.save_checkpoint(ckpt_path)
+        ckpt_path = f"{self.file_path}_e{trainer.current_epoch}.ckpt"
+        trainer.save_checkpoint(ckpt_path)
 
 
 class dataset(Dataset):
@@ -65,10 +61,10 @@ class DataCollator(object):
         title_to_abs_inputs = []
         title_to_abs_target = []
         for title, abstract in batch:
-            abs_to_title_inputs.append("abstract: " + abstract)
+            abs_to_title_inputs.append("abstract: " + abstract)  # we use "abstract: " as prompt for abs_to_title task.
             abs_to_title_target.append(title)
 
-            title_to_abs_inputs.append("title: " + title)
+            title_to_abs_inputs.append("title: " + title)  # we use "title: " as prompt for title_to_abs task.
             title_to_abs_target.append(abstract)
 
         abs_to_title_inputs = self.tokenizer(abs_to_title_inputs, return_tensors='pt', padding=True, truncation=True)
@@ -80,8 +76,7 @@ class DataCollator(object):
         return abs_to_title_inputs, abs_to_title_labels, title_to_abs_inputs, title_to_abs_labels
 
 
-
-class absTtilePL(pl.LightningModule):
+class BiTAG_pl(pl.LightningModule):
     def __init__(self, model):
         super().__init__()
         self.model = model
@@ -108,35 +103,46 @@ class absTtilePL(pl.LightningModule):
         return optimizer
 
 
-
 if __name__ == "__main__":
     seed_everything(313)
-    model_name = 't5-large'
-    batch_size = 32
-    save_path = "ckpts/gpu4_bs32"
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--base_model", type=str, default="t5-large")
+    parser.add_argument("--output_path", type=str, default="ckpts/BiTAG")
 
-    config = T5Config.from_pretrained(model_name, cache_dir=".cache", use_cache=False, gradient_checkpointing=True)
-    model = T5ForConditionalGeneration.from_pretrained(model_name, cache_dir=".cache", config=config)
-    tokenizer = T5Tokenizer.from_pretrained(model_name, cache_dir=".cache")
+    # training config
+    parser.add_argument("--num_gpus", type=int, default=4)
+    parser.add_argument("--batch_size", type=int, default=32)
+    parser.add_argument("--num_nodes", type=int, default=1, help="For multi-node multi-gpu training.")
+    parser.add_argument("--num_workers", type=int, default=8, help="Number of works for dataloader.")
+    parser.add_argument("--max_epochs", type=int, default=10, help="The maximum training epochs.")
+    args = parser.parse_args()
+
+    config = T5Config.from_pretrained(args.base_model,
+                                      cache_dir=".cache",
+                                      use_cache=False,
+                                      gradient_checkpointing=True,  # trade-off GPU training speed and memory.
+                                      )
+    model = T5ForConditionalGeneration.from_pretrained(args.base_model, cache_dir=".cache", config=config)
+    tokenizer = T5Tokenizer.from_pretrained(args.base_model, cache_dir=".cache")
     dataset = dataset('data/')
     tb_logger = pl_loggers.TensorBoardLogger('logs/')
 
     loader = DataLoader(dataset=dataset,
-                        batch_size=batch_size,
+                        batch_size=args.batch_size,
                         drop_last=True,
                         pin_memory=True,
                         shuffle=True,
-                        num_workers=8,
+                        num_workers=args.num_workers,
                         collate_fn=DataCollator(tokenizer))
 
-    trainer = Trainer(max_epochs=20,
-                      gpus=1,
-                      num_nodes=4,
+    trainer = Trainer(max_epochs=args.max_epochs,
+                      gpus=args.num_gpus,
+                      num_nodes=args.num_nodes,
                       checkpoint_callback=False,
                       logger=tb_logger,
                       accelerator="ddp",
                       plugins='ddp_sharded',
                       log_every_n_steps=10,
-                      callbacks=[CheckpointEveryEpoch(2, save_path)]
+                      callbacks=[CheckpointEveryEpoch(args.output_path)]
                       )
-    trainer.fit(absTtilePL(model), loader)
+    trainer.fit(BiTAG_pl(model), loader)
