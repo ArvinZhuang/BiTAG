@@ -4,7 +4,7 @@ BiTAG is a [T5-based](https://arxiv.org/pdf/1910.10683.pdf) text generator that 
 1) Generate candidate titles for a given abstract (abs_to_title). 
 2) Generate abstracts for a given title (title_to_abs).
 
-The basic idea of BiTAG is similar to [docTTTTTquery](https://github.com/castorini/docTTTTTquery) [1] but trained with [BiQDLM](https://github.com/ielab/TILDE) [2] loss function. 
+The basic idea of BiTAG is similar to [docTTTTTquery](https://github.com/castorini/docTTTTTquery) [1] but trained with [BiQDL](https://github.com/ielab/TILDE) [2] loss function. 
 
 BiTAG is trained on 361349 title-abstract pairs that crawled from Arxiv computer science papers uploaded between 2000-06-01 and 2021-06-01. It uses a [Huggingface](https://huggingface.co/transformers/model_doc/t5.html) t5-large model that trained on 4 Tesla v100 GPUs for 4 epochs.
 
@@ -70,7 +70,7 @@ We relay on [transformers](https://github.com/huggingface/transformers) and [pyt
 
 If you want to train BiTAG by yourself, first install the dependencies required in this repo by `pip install -r requirements.txt`.
 
-###Create the training dataset
+### Create the training dataset
 We use an open-source Arxiv crawler called `arxivscraper` from this [repo](https://github.com/Mahdisadjadi/arxivscraper) to create our training set. Simply run the following command in the root directory:
 ```
 python3 create_dataset.py --date_from 2000-06-01 --date_util 2021-06-01 --category cs
