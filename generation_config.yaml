@@ -7,7 +7,7 @@
   "search_method": "sampling",      # "sampling" or "beam".
   "beam_search_config": {
     "max_length": 5000,
-    "num_beams": 50,
+    "num_beams": 20,
     "num_return_sequences": 10
   },
 
