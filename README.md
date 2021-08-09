@@ -14,10 +14,10 @@ If you just want to use BiTAG to generate title or abstract for you, then you on
 
 After you install the library, you can download and run BiTAG with the following code:
 ```
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+from transformers import AutoModelForSeq2SeqLM, T5Tokenizer
 
 model = AutoModelForSeq2SeqLM.from_pretrained("ArvinZhuang/BiTAG-t5-large")
-tokenizer = AutoTokenizer.from_pretrained("ArvinZhuang/BiTAG-t5-large")
+tokenizer = T5Tokenizer.from_pretrained("t5-large")
 
 text = "abstract: [your abstract]"  # use 'title:' as the prefix for title_to_abs task.
 input_ids = tokenizer.encode(text, return_tensors='pt')
