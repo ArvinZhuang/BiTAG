@@ -10,6 +10,12 @@ BiTAG is trained on 361349 title-abstract pairs that crawled from Arxiv computer
 
 
 # Minimal use cases
+
+### Huggingface API interface: 
+[https://huggingface.co/ArvinZhuang/BiTAG-t5-large](https://huggingface.co/ArvinZhuang/BiTAG-t5-large)
+
+
+### Python Code:
 If you just want to use BiTAG to generate title or abstract for you, then you only need to install [transformers](https://github.com/huggingface/transformers) library by `pip install transformers`.
 
 After you install the library, you can download and run BiTAG with the following code:
